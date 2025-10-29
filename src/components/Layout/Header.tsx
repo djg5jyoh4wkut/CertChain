@@ -27,12 +27,20 @@ const Header = () => {
             Home
           </Link>
           <Link
+            to="/how-it-works"
+            className={`transition-colors hover:text-primary ${
+              isActive('/how-it-works') ? 'text-primary' : 'text-foreground/60'
+            }`}
+          >
+            How It Works
+          </Link>
+          <Link
             to="/admin"
             className={`transition-colors hover:text-primary ${
               isActive('/admin') ? 'text-primary' : 'text-foreground/60'
             }`}
           >
-            Admin
+            Create
           </Link>
           <Link
             to="/claim"

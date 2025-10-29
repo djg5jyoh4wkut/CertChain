@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import Claim from "./pages/Claim";
 import History from "./pages/History";
+import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
 import Header from "./components/Layout/Header";
 import Footer from "./components/Layout/Footer";
@@ -31,6 +32,7 @@ const App = () => (
               <main className="flex-1">
                 <Routes>
                   <Route path="/" element={<Home />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/claim" element={<Claim />} />
                   <Route path="/history" element={<History />} />
