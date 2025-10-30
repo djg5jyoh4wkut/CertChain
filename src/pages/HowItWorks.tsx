@@ -124,25 +124,16 @@ const HowItWorks = () => {
 
             <Card className="border-border/40 shadow-card overflow-hidden">
               <CardContent className="p-0">
-                <div className="relative aspect-video bg-muted flex items-center justify-center">
-                  <div className="text-center p-8">
-                    <PlayCircle className="h-20 w-20 text-muted-foreground/50 mx-auto mb-4" />
-                    <p className="text-muted-foreground mb-4">Demo video coming soon</p>
-                    <p className="text-sm text-muted-foreground/70">
-                      In the meantime, try the live demo by connecting your wallet
-                    </p>
-                  </div>
-                  {/* Placeholder for video */}
-                  {/*
-                  <iframe
+                <div className="relative aspect-video bg-black">
+                  <video
                     className="w-full h-full"
-                    src="YOUR_VIDEO_URL"
-                    title="CertChain Demo"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                  */}
+                    controls
+                    preload="metadata"
+                    poster="/demo-video-poster.jpg"
+                  >
+                    <source src="/demo-vedio.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
                 </div>
               </CardContent>
             </Card>
