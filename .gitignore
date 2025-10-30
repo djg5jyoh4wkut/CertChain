@@ -40,3 +40,4 @@ contracts/deployment.json
 
 # TypeScript
 *.tsbuildinfo
+.vercel

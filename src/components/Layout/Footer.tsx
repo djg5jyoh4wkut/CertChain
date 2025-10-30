@@ -1,4 +1,4 @@
-import { Shield } from 'lucide-react';
+// brand logo uses public/favicon.svg
 
 const Footer = () => {
   return (
@@ -6,7 +6,7 @@ const Footer = () => {
       <div className="container py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center space-x-2">
-            <Shield className="h-5 w-5 text-primary" />
+            <img src="/favicon.svg" alt="CertChain" className="h-5 w-5" />
             <span className="font-semibold bg-gradient-primary bg-clip-text text-transparent">
               CertChain
             </span>

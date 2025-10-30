@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Download, Wallet } from 'lucide-react';
-import { useAccount } from 'wagmi';
+import { useAccount, useWaitForTransactionReceipt } from 'wagmi';
 import { useAirdrop } from '@/hooks/useAirdrop';
 import { parseUnits } from 'viem';
 
@@ -13,9 +13,78 @@ const Claim = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [claimAmount, setClaimAmount] = useState('');
-  const { myAllocation, myRemaining, claim } = useAirdrop();
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+  const [submittedAmount, setSubmittedAmount] = useState('');
+  const { myAllocation, myRemaining, claim, refetchAllocation, refetchClaimed, refetchRemaining } = useAirdrop();
 
   const hasAllocation = myAllocation && myAllocation !== '0x0000000000000000000000000000000000000000000000000000000000000000';
+
+  // Monitor transaction confirmation
+  const { isLoading: isPending, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  // Show pending notification
+  useEffect(() => {
+    if (txHash && isPending) {
+      const explorerUrl = `https://sepolia.etherscan.io/tx/${txHash}`;
+      toast({
+        title: '⏳ Transaction pending...',
+        description: (
+          <div className="space-y-2">
+            <p>Your claim transaction is being confirmed.</p>
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+            >
+              View on Etherscan →
+            </a>
+          </div>
+        ),
+        duration: 5000,
+      });
+    }
+  }, [txHash, isPending, toast]);
+
+  // Show confirmation notification
+  useEffect(() => {
+    if (isConfirmed && txHash && submittedAmount) {
+      const explorerUrl = `https://sepolia.etherscan.io/tx/${txHash}`;
+
+      toast({
+        title: '✅ Claim successful!',
+        description: (
+          <div className="space-y-2">
+            <p>You claimed {submittedAmount} tokens successfully.</p>
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+            >
+              View on Etherscan →
+            </a>
+          </div>
+        ),
+        duration: 10000,
+      });
+
+      // Refetch data after claim
+      setTimeout(() => {
+        refetchAllocation();
+        refetchClaimed();
+        refetchRemaining();
+      }, 2000);
+
+      // Reset form
+      setClaimAmount('');
+      setSubmittedAmount('');
+      setTxHash(undefined);
+      setIsLoading(false);
+    }
+  }, [isConfirmed, txHash, submittedAmount, toast, refetchAllocation, refetchClaimed, refetchRemaining]);
 
   const handleClaim = async () => {
     if (!isConnected) {
@@ -39,16 +108,26 @@ const Claim = () => {
     setIsLoading(true);
 
     try {
-      // Convert amount to bigint (assuming 18 decimals like most tokens)
-      const amount = parseUnits(claimAmount, 18);
+      console.log('[Claim] Starting claim...');
+      console.log('[Claim] Amount:', claimAmount);
+
+      // Convert amount to bigint with 6 decimals (to fit in uint64)
+      const amount = parseUnits(claimAmount, 6);
+      console.log('[Claim] Amount (6 decimals):', amount.toString());
 
       // Call the claim function with FHE encryption
-      await claim(amount);
+      console.log('[Claim] Encrypting and submitting...');
+      const hash = await claim(amount);
 
-      setClaimAmount('');
+      console.log('[Claim] Transaction hash:', hash);
+
+      // Save transaction hash and amount for confirmation notification
+      setTxHash(hash);
+      setSubmittedAmount(claimAmount);
+
+      // Note: Don't reset isLoading here - it will be reset after confirmation
     } catch (error) {
-      console.error('Claim error:', error);
-    } finally {
+      console.error('[Claim] ❌ Claim error:', error);
       setIsLoading(false);
     }
   };
@@ -145,10 +224,10 @@ const Claim = () => {
                       onChange={(e) => setClaimAmount(e.target.value)}
                       disabled={isLoading}
                       min="0"
-                      step="0.000000000000000001"
+                      step="0.000001"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Enter the amount you want to claim. The amount will be encrypted using FHE.
+                      Enter the amount you want to claim. The amount will be encrypted using FHE (6 decimal precision).
                     </p>
                   </div>
                 )}

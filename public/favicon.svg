@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- CertChain emblem: certificate ribbon + chain link/checkmark -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B1016"/>
+      <stop offset="100%" stop-color="#0A0E14"/>
+    </linearGradient>
+    <linearGradient id="primary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5CC8FF"/>
+      <stop offset="100%" stop-color="#1FA0FF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7CF2C6"/>
+      <stop offset="100%" stop-color="#2CC99A"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8E7B9"/>
+      <stop offset="100%" stop-color="#D1A84A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="128" height="128" rx="16" ry="16" fill="url(#bg)"/>
+
+  <!-- Certificate medal -->
+  <g transform="translate(20,16)">
+    <circle cx="44" cy="40" r="26" fill="url(#gold)"/>
+    <circle cx="44" cy="40" r="22" fill="#0B1016" opacity="0.15"/>
+    <path d="M36 64l-10 18 18-8 18 8-10-18" fill="url(#primary)"/>
+  </g>
+
+  <!-- Chain link with check -->
+  <g transform="translate(58,58)">
+    <rect x="-18" y="6" width="36" height="12" rx="6" fill="#1E2A36"/>
+    <rect x="-22" y="2" width="36" height="12" rx="6" fill="url(#primary)" opacity="0.9"/>
+    <rect x="8" y="-6" width="36" height="12" rx="6" fill="#1E2A36"/>
+    <rect x="4" y="-10" width="36" height="12" rx="6" fill="url(#accent)" opacity="0.9"/>
+    <path d="M10 14l6 6 12-12" fill="none" stroke="#0A221A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Accent ring -->
+  <rect x="6" y="6" width="116" height="116" rx="14" ry="14" fill="none" stroke="url(#primary)" stroke-width="2"/>
+</svg>
+
+

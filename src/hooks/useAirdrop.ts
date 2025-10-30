@@ -62,11 +62,7 @@ export function useAirdrop() {
         args: [recipientAddress as `0x${string}`, encryptedAmount, proof],
       });
 
-      toast({
-        title: "Allocation Created",
-        description: "Encrypted allocation created successfully",
-      });
-
+      console.log('[useAirdrop] Transaction submitted:', hash);
       return hash;
     } catch (error) {
       console.error("Error setting allocation:", error);
@@ -106,18 +102,7 @@ export function useAirdrop() {
         args: [encryptedAmount, proof],
       });
 
-      toast({
-        title: "Claim Submitted",
-        description: "Your claim transaction has been submitted",
-      });
-
-      // Refetch data after claim
-      setTimeout(() => {
-        refetchAllocation();
-        refetchClaimed();
-        refetchRemaining();
-      }, 3000);
-
+      console.log('[useAirdrop] Claim transaction submitted:', hash);
       return hash;
     } catch (error) {
       console.error("Error claiming:", error);

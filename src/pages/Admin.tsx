@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Plus } from 'lucide-react';
-import { useAccount } from 'wagmi';
+import { useAccount, useWaitForTransactionReceipt } from 'wagmi';
 import { useAirdrop } from '@/hooks/useAirdrop';
 import { parseUnits, isAddress } from 'viem';
 
@@ -15,10 +15,74 @@ const Admin = () => {
   const [recipientAddress, setRecipientAddress] = useState('');
   const [quota, setQuota] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+  const [submittedQuota, setSubmittedQuota] = useState('');
   const { setAllocation } = useAirdrop();
+
+  // Monitor transaction confirmation
+  const { isLoading: isPending, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  // Show pending notification
+  useEffect(() => {
+    if (txHash && isPending) {
+      const explorerUrl = `https://sepolia.etherscan.io/tx/${txHash}`;
+      toast({
+        title: '⏳ Transaction pending...',
+        description: (
+          <div className="space-y-2">
+            <p>Your allocation transaction is being confirmed.</p>
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+            >
+              View on Etherscan →
+            </a>
+          </div>
+        ),
+        duration: 5000,
+      });
+    }
+  }, [txHash, isPending, toast]);
+
+  // Show confirmation notification
+  useEffect(() => {
+    if (isConfirmed && txHash && submittedQuota) {
+      const explorerUrl = `https://sepolia.etherscan.io/tx/${txHash}`;
+
+      toast({
+        title: '✅ Allocation created successfully!',
+        description: (
+          <div className="space-y-2">
+            <p>Encrypted allocation of {submittedQuota} tokens has been confirmed on-chain.</p>
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+            >
+              View on Etherscan →
+            </a>
+          </div>
+        ),
+        duration: 10000,
+      });
+
+      // Reset form
+      setRecipientAddress('');
+      setQuota('');
+      setSubmittedQuota('');
+      setTxHash(undefined);
+      setIsLoading(false);
+    }
+  }, [isConfirmed, txHash, submittedQuota, toast]);
 
   const handleSetQuota = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     if (!isConnected) {
       toast({
@@ -50,17 +114,29 @@ const Admin = () => {
     setIsLoading(true);
 
     try {
-      // Convert quota to bigint (assuming 18 decimals)
-      const amount = parseUnits(quota, 18);
+      console.log('[Admin] Starting allocation creation...');
+      console.log('[Admin] Recipient:', recipientAddress);
+      console.log('[Admin] Quota:', quota);
+
+      // Convert quota to bigint with 6 decimals (to fit in uint64)
+      // uint64 max: 18446744073709551615 (~18.4 quintillion)
+      // With 6 decimals: max value ~18446744073703 tokens
+      const amount = parseUnits(quota, 6);
+      console.log('[Admin] Amount (6 decimals):', amount.toString());
 
       // Call setAllocation with FHE encryption
-      await setAllocation(recipientAddress, amount);
+      console.log('[Admin] Encrypting and submitting...');
+      const hash = await setAllocation(recipientAddress, amount);
 
-      setRecipientAddress('');
-      setQuota('');
+      console.log('[Admin] Transaction hash:', hash);
+
+      // Save transaction hash and quota for confirmation notification
+      setTxHash(hash);
+      setSubmittedQuota(quota);
+
+      // Note: Don't reset isLoading here - it will be reset after confirmation
     } catch (error) {
-      console.error('Error setting quota:', error);
-    } finally {
+      console.error('[Admin] ❌ Error setting quota:', error);
       setIsLoading(false);
     }
   };
@@ -129,11 +205,11 @@ const Admin = () => {
                     onChange={(e) => setQuota(e.target.value)}
                     required
                     min="0"
-                    step="0.000000000000000001"
+                    step="0.000001"
                     disabled={isLoading}
                   />
                   <p className="text-sm text-muted-foreground">
-                    This amount will be encrypted using FHE before being recorded on-chain
+                    This amount will be encrypted using FHE before being recorded on-chain (6 decimal precision)
                   </p>
                 </div>
 

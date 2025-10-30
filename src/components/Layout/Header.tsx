@@ -1,6 +1,5 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();
@@ -11,7 +10,7 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center space-x-2 transition-opacity hover:opacity-80">
-          <Shield className="h-6 w-6 text-primary" />
+          <img src="/favicon.svg" alt="CertChain" className="h-6 w-6" />
           <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             CertChain
           </span>
@@ -25,14 +24,6 @@ const Header = () => {
             }`}
           >
             Home
-          </Link>
-          <Link
-            to="/how-it-works"
-            className={`transition-colors hover:text-primary ${
-              isActive('/how-it-works') ? 'text-primary' : 'text-foreground/60'
-            }`}
-          >
-            How It Works
           </Link>
           <Link
             to="/admin"
@@ -57,6 +48,14 @@ const Header = () => {
             }`}
           >
             History
+          </Link>
+          <Link
+            to="/how-it-works"
+            className={`transition-colors hover:text-primary ${
+              isActive('/how-it-works') ? 'text-primary' : 'text-foreground/60'
+            }`}
+          >
+            How It Works
           </Link>
         </nav>
 
