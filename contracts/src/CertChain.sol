@@ -2,13 +2,15 @@
 pragma solidity ^0.8.24;
 
 import { FHE, euint64, externalEuint64 } from "@fhevm/solidity/lib/FHE.sol";
-import { SepoliaConfig } from "@fhevm/solidity/config/ZamaConfig.sol";
+import { ZamaEthereumConfig } from "@fhevm/solidity/config/ZamaConfig.sol";
 
 /// @title CertChain — Public Encrypted Quota Distribution with FHEVM
 /// @notice Anyone can create encrypted allocations for any address.
 ///         Per-user allocations and claims are stored as encrypted values (euint64).
 ///         Only the recipient can decrypt their own allocation amount.
-contract ConfAirdrop is SepoliaConfig {
+/// @dev Updated to FHEVM v0.9.1 - uses ZamaEthereumConfig instead of SepoliaConfig
+///      for dynamic chain ID resolution
+contract ConfAirdrop is ZamaEthereumConfig {
     // Encrypted per-user allocation and claimed amounts
     mapping(address => euint64) private _allocation;
     mapping(address => euint64) private _claimed;
