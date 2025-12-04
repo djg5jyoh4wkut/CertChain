@@ -1,5 +1,5 @@
 export const CONTRACTS = {
-  ConfAirdrop: "0x2AcF80C297D443FeAD9E5A4752A7342361Bc5f2a" as `0x${string}`,
+  ConfAirdrop: "0x50e9710E49991EBc748fdC7D95eE87c8bAcb55Cf" as `0x${string}`,
 };
 
 export const ABIS = {
