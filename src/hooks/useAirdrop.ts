@@ -1,14 +1,13 @@
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { CONTRACTS, ABIS } from "@/config/contracts";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { CONTRACTS, ABIS } from "@/lib/contracts";
 import { encryptQuotaAmount, initializeFHE } from "@/lib/fhe";
-import { useToast } from "@/hooks/use-toast";
 
 /**
  * Hook for interacting with the ConfAirdrop contract
+ * Note: Transaction status notifications are handled by the page components
  */
 export function useAirdrop() {
   const { address } = useAccount();
-  const { toast } = useToast();
   const { writeContractAsync } = useWriteContract();
 
   // Read user's allocation
@@ -47,10 +46,9 @@ export function useAirdrop() {
       // Initialize FHE
       await initializeFHE();
 
-      // Encrypt the quota amount
+      // Encrypt the quota amount (v0.9.1 API: amount, userAddress)
       const { encryptedAmount, proof } = await encryptQuotaAmount(
         amount,
-        CONTRACTS.ConfAirdrop,
         address
       );
 
@@ -66,11 +64,6 @@ export function useAirdrop() {
       return hash;
     } catch (error) {
       console.error("Error setting allocation:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to set allocation",
-        variant: "destructive",
-      });
       throw error;
     }
   };
@@ -87,10 +80,9 @@ export function useAirdrop() {
       // Initialize FHE
       await initializeFHE();
 
-      // Encrypt the claim amount
+      // Encrypt the claim amount (v0.9.1 API: amount, userAddress)
       const { encryptedAmount, proof } = await encryptQuotaAmount(
         amount,
-        CONTRACTS.ConfAirdrop,
         address
       );
 
@@ -106,11 +98,6 @@ export function useAirdrop() {
       return hash;
     } catch (error) {
       console.error("Error claiming:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to claim",
-        variant: "destructive",
-      });
       throw error;
     }
   };

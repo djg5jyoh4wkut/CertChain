@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePublicClient, useBlockNumber } from "wagmi";
-import { CONTRACTS, ABIS } from "@/config/contracts";
+import { CONTRACTS, ABIS } from "@/lib/contracts";
 import { formatDistanceToNow } from "date-fns";
 
 export type HistoryEvent = {
