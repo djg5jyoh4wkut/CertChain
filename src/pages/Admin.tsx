@@ -20,9 +20,33 @@ const Admin = () => {
   const { setAllocation } = useAirdrop();
 
   // Monitor transaction confirmation
-  const { isLoading: isPending, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const { isLoading: isPending, isSuccess: isConfirmed, isError: isFailed, error: txError } = useWaitForTransactionReceipt({
     hash: txHash,
   });
+
+  // Show transaction submitted notification
+  useEffect(() => {
+    if (txHash && !isPending && !isConfirmed && !isFailed) {
+      const explorerUrl = `https://sepolia.etherscan.io/tx/${txHash}`;
+      toast({
+        title: '📤 Transaction Submitted',
+        description: (
+          <div className="space-y-2">
+            <p>Your allocation transaction has been submitted to the network.</p>
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+            >
+              View on Etherscan →
+            </a>
+          </div>
+        ),
+        duration: 5000,
+      });
+    }
+  }, [txHash, isPending, isConfirmed, isFailed, toast]);
 
   // Show pending notification
   useEffect(() => {
@@ -79,6 +103,37 @@ const Admin = () => {
       setIsLoading(false);
     }
   }, [isConfirmed, txHash, submittedQuota, toast]);
+
+  // Show failure notification
+  useEffect(() => {
+    if (isFailed && txHash) {
+      const explorerUrl = `https://sepolia.etherscan.io/tx/${txHash}`;
+
+      toast({
+        title: '❌ Transaction Failed',
+        description: (
+          <div className="space-y-2">
+            <p>{txError?.message || 'Your allocation transaction failed on-chain.'}</p>
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+            >
+              View on Etherscan →
+            </a>
+          </div>
+        ),
+        variant: 'destructive',
+        duration: 10000,
+      });
+
+      // Reset state
+      setTxHash(undefined);
+      setSubmittedQuota('');
+      setIsLoading(false);
+    }
+  }, [isFailed, txHash, txError, toast]);
 
   const handleSetQuota = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,6 +192,19 @@ const Admin = () => {
       // Note: Don't reset isLoading here - it will be reset after confirmation
     } catch (error) {
       console.error('[Admin] ❌ Error setting quota:', error);
+
+      // Show error notification for pre-submission errors (FHE encryption, wallet rejection, etc.)
+      toast({
+        title: '❌ Transaction Error',
+        description: (
+          <div className="space-y-2">
+            <p>{error instanceof Error ? error.message : 'Failed to submit transaction'}</p>
+          </div>
+        ),
+        variant: 'destructive',
+        duration: 8000,
+      });
+
       setIsLoading(false);
     }
   };
