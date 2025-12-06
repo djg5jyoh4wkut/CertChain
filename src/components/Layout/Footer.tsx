@@ -17,7 +17,7 @@ const Footer = () => {
           </p>
           
           <p className="text-sm text-muted-foreground">
-            © 2024 CertChain. All rights reserved.
+            © 2025 CertChain. All rights reserved.
           </p>
         </div>
       </div>

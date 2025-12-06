@@ -71,7 +71,7 @@ const HowItWorks = () => {
   const technicalDetails = [
     {
       title: 'Zama fhEVM',
-      description: 'Built on Zama\'s Fully Homomorphic Encryption Virtual Machine (fhEVM) v0.8.0',
+      description: 'Built on Zama\'s Fully Homomorphic Encryption Virtual Machine (fhEVM) v0.9.1',
     },
     {
       title: 'euint64 Encryption',
@@ -131,7 +131,7 @@ const HowItWorks = () => {
                     preload="metadata"
                     poster="/demo-video-poster.jpg"
                   >
-                    <source src="/demo-vedio.mp4" type="video/mp4" />
+                    <source src="/demo—vedio.mp4" type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                 </div>
