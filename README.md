@@ -8,198 +8,255 @@
 
 FHE-powered quota/certificate issuance and on-chain verification
 
+[![Zama fhEVM](https://img.shields.io/badge/Zama%20fhEVM-v0.9.1-blue)](https://docs.zama.ai/fhevm)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite)](https://vitejs.dev/)
+
+**[Live Demo](https://certchain.vercel.app)** | **[Contract on Sepolia](https://sepolia.etherscan.io/address/0x50e9710E49991EBc748fdC7D95eE87c8bAcb55Cf)**
+
 </div>
 
 ---
 
-## 1. Overview (What & Why)
+## Overview
 
-CertChain provides an end-to-end solution for issuing and verifying quotas/permissions/certificates on-chain. Typical use cases:
+CertChain provides an end-to-end solution for issuing and verifying quotas/permissions/certificates on-chain with full privacy using Fully Homomorphic Encryption (FHE).
 
-- Airdrop allocations with per-user limits (e.g., each address can claim X)
-- Ticketing/eligibility proofs (verifiable without revealing personal limits)
-- Web3 membership tiers with allowance tracking (consumption/accumulation)
+### Use Cases
 
-Unlike plain-text storage, CertChain stores and computes over encrypted amounts using Fully Homomorphic Encryption (FHE), achieving verifiable, computable, and minimal-disclosure properties.
+- **Airdrop Allocations** - Per-user limits with encrypted amounts
+- **Ticketing/Eligibility** - Verifiable proofs without revealing limits
+- **Membership Tiers** - Private allowance tracking and consumption
+- **Private Gifts & Rewards** - Confidential token distribution
 
-Key benefits:
+### Key Benefits
 
-- Verifiable: anyone can validate the correctness of actions
-- Computable: compare/add/update on ciphertext without revealing plaintext
-- Minimal disclosure: keep sensitive numeric data hidden
-
----
-
-## 2. How FHE Works Here (Flow)
-
-1) Issuance
-- Client/backend provides encrypted allowance `C_quota`
-- Contract stores `C_quota` without plaintext leakage
-
-2) Claim/Spend
-- User submits required parameters (minimal plaintext + ciphertext)
-- Contract performs encrypted checks via fhEVM primitives (e.g., `C_quota - C_spent >= C_req`)
-- If valid, update on-chain ciphertext state (`C_spent' = C_spent + C_req`)
-
-3) Outputs
-- Events/states expose validity only; not the actual amounts
-
-Common primitives (via Zama fhEVM; see `src/lib/fhe.ts` and contracts):
-
-- Encrypted add/subtract
-- Encrypted compare
-- Encrypted select (conditional)
-
-These enable allowance verification and updates without decryption.
+| Feature | Description |
+|---------|-------------|
+| **Verifiable** | Anyone can validate correctness of actions |
+| **Computable** | Compare/add/update on ciphertext without decryption |
+| **Minimal Disclosure** | Sensitive numeric data remains hidden |
 
 ---
 
-## 3. Smart Contract Architecture
+## How FHE Works
 
-Main entry: `contracts/src/CertChain.sol`
+### Flow
 
-Modules:
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  1. Issue   │────▶│  2. Store   │────▶│  3. Claim   │
+│  Encrypted  │     │  On-Chain   │     │  Privately  │
+│  Quota      │     │  Ciphertext │     │  Verified   │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
 
-- Quota/Certificate Management
-  - Store user encrypted quotas and states
-  - Create/update/spend interfaces
-- Verification & Execution
-  - Encrypted comparisons and updates on-chain
-  - Monotonicity guarantees (no underflow/invalid states)
-- Events & Observability
-  - Minimal, privacy-preserving events for UI/analytics
+1. **Issuance** - Client encrypts quota amount using FHE, contract stores ciphertext
+2. **Storage** - Encrypted values stored on-chain, no plaintext leakage
+3. **Claiming** - Contract performs encrypted checks (`C_quota - C_spent >= C_req`)
+4. **Output** - Events expose validity only, not actual amounts
 
-Security boundaries:
+### FHE Primitives (Zama fhEVM v0.9.1)
 
-- No plaintext storage of sensitive numeric fields
-- Minimal disclosure in events to avoid inference
-- Role-based control for issuer/admin (extensible)
-
-Deployment & artifacts:
-
-- `contracts/scripts/deploy.js` — deployment routine
-- `contracts/artifacts` — compiled outputs
-- `contracts/deployment.json` — last deployment info
-
-Tests: see `tests/` (e.g., `fhe.test.ts`, `allocation.test.ts`).
+| Operation | Description |
+|-----------|-------------|
+| `FHE.fromExternal` | Convert external encrypted input to euint64 |
+| `FHE.add` | Add two encrypted values |
+| `FHE.sub` | Subtract encrypted values |
+| `FHE.le` | Less than or equal comparison |
+| `FHE.select` | Conditional selection based on encrypted boolean |
+| `FHE.asEuint64` | Convert plaintext to encrypted uint64 |
+| `FHE.allowThis` | Grant contract permission to access value |
+| `FHE.allow` | Grant address permission to access value |
 
 ---
 
-## 4. System Architecture (Stack)
+## Smart Contract
 
-Frontend (`src/`):
+### Deployed Contract
 
-- React + Vite + TypeScript
-- UI: shadcn-ui, Tailwind CSS
-- Wallet & chain: RainbowKit + wagmi + viem
-- FHE helpers: `src/lib/fhe.ts`
+| Network | Address | Explorer |
+|---------|---------|----------|
+| Sepolia | `0x50e9710E49991EBc748fdC7D95eE87c8bAcb55Cf` | [View](https://sepolia.etherscan.io/address/0x50e9710E49991EBc748fdC7D95eE87c8bAcb55Cf) |
 
-Contracts/Tooling:
+### Contract Functions
 
-- Solidity (fhEVM-compatible)
-- Hardhat project under `contracts/`
-- Zama fhEVM primitives (add/compare/select)
+```solidity
+// Set allocation for a recipient (encrypted amount)
+function setAllocation(address recipient, externalEuint64 encryptedAmt, bytes inputProof)
 
-Run/Config:
+// Batch set allocations for multiple recipients
+function batchSetAllocation(address[] recipients, externalEuint64 encryptedAmt, bytes inputProof)
 
-- Network/addresses: see `src/lib/wagmi.ts` and `contracts/deployment.json`
+// Claim from allocation (encrypted amount)
+function claim(externalEuint64 encryptedAmt, bytes inputProof)
+
+// View functions (returns encrypted values)
+function getMyAllocation() returns (euint64)
+function getMyClaimed() returns (euint64)
+function getMyRemaining() returns (euint64)
+```
+
+### Events
+
+- `AllocationSet(address indexed creator, address indexed recipient)`
+- `AllocationBatchSet(address indexed creator, uint256 count)`
+- `Claimed(address indexed user)`
+
+---
+
+## Tech Stack
+
+### Frontend
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| React | 18.3 | UI Framework |
+| TypeScript | 5.8 | Type Safety |
+| Vite | 5.4 | Build Tool |
+| wagmi | 2.19 | Ethereum Hooks |
+| viem | 2.40 | Ethereum Client |
+| RainbowKit | 2.2 | Wallet Connection |
+| shadcn/ui | - | UI Components |
+| Tailwind CSS | 3.4 | Styling |
+
+### FHE Integration
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| Zama fhEVM | 0.9.1 | FHE Smart Contracts |
+| Relayer SDK | 0.3.0-5 | Client-side Encryption |
+
+### Testing
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| Vitest | 4.0 | Test Runner |
+| jsdom | 27.0 | DOM Environment |
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- MetaMask or compatible wallet
+- Sepolia ETH for gas
+
+### Installation
 
 ```bash
-npm i
+# Clone repository
+git clone https://github.com/your-org/CertChain.git
+cd CertChain
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
 ```
 
-Build/preview:
+### Available Scripts
 
 ```bash
-npm run build
-npm run preview
+npm run dev          # Start dev server
+npm run build        # Production build
+npm run preview      # Preview production build
+npm test             # Run tests
+npm run test:watch   # Watch mode
+npm run test:coverage # Coverage report
 ```
 
 ---
 
-## 5. Usage Guide
+## Usage Guide
 
-1) Admin issues quotas/certificates
-- Use `/admin` to create entries and submit the transaction
-- Contract stores encrypted amounts and metadata
+### For Administrators (Creating Allocations)
 
-2) User claims/consumes
-- Initiate "claim/spend" in the UI
-- Contract validates in ciphertext and updates state; UI reflects result
+1. Connect wallet to the platform
+2. Navigate to "Create Allocation" page (`/admin`)
+3. Enter recipient address and quota amount
+4. Confirm transaction - amount encrypted automatically
+5. View allocation history
 
-3) History & audit
-- View/export records under `/history` without disclosing plaintext amounts
+### For Recipients (Claiming Quotas)
 
----
-
-## 6. Roadmap
-
-- v0.1 Core
-  - Create/claim/spend with encrypted checks and updates
-  - Basic UI and wallet integration
-- v0.2 Observability & Governance
-  - Finer-grained events and dashboards
-  - Roles and permissions (issuer, reviewer, multisig)
-- v0.3 Composability
-  - Interfaces for 3rd-party dapps (whitelist, tickets, membership)
-  - Batch ops and subgraph/indexer support
-- v0.4 Advanced FHE
-  - Richer encrypted ops (range checks, thresholds)
-  - Performance and cost optimizations
+1. Connect wallet to the platform
+2. Navigate to "Claim Quota" page (`/claim`)
+3. Check your allocation status
+4. Enter amount to claim and confirm transaction
+5. Transaction validates encrypted amount on-chain
 
 ---
 
-## 7. Security & Privacy Notes
-
-- Compute only what’s necessary on ciphertext to reduce leakage
-- Design events carefully to avoid side-channel inference
-- Add rate-limiting/governance switches on critical paths
-- Third-party audits recommended before mainnet
-
----
-
-## 8. Repository Layout
+## Project Structure
 
 ```
 CertChain/
-  contracts/            # Hardhat project & contracts
-  public/               # Static assets (favicon, videos)
-  src/                  # Frontend (React + TS)
-    components/         # UI components
-    lib/                # FHE, wagmi utilities
-    pages/              # Routes
-  tests/                # Unit/integration tests (TS)
+├── contracts/              # Solidity contracts (fhEVM)
+│   ├── src/               # Contract source files
+│   └── scripts/           # Deployment scripts
+├── public/                # Static assets
+│   ├── favicon.svg        # App icon
+│   └── demo—vedio.mp4     # Demo video
+├── src/                   # Frontend source
+│   ├── components/        # React components
+│   │   ├── Layout/       # Header, Footer, etc.
+│   │   └── ui/           # shadcn components
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # Utilities
+│   │   ├── contracts.ts  # Contract addresses & ABIs
+│   │   ├── fhe.ts        # FHE helpers
+│   │   └── wagmi.ts      # Wallet config
+│   └── pages/            # Route pages
+├── tests/                 # Unit tests
+│   ├── allocation.test.ts # Allocation logic tests
+│   ├── fhe.test.ts       # FHE module tests
+│   └── utils.test.ts     # Utility tests
+└── package.json
 ```
 
 ---
 
-## 9. Development & Deployment
+## Security & Privacy
 
-Local dev:
+### Design Principles
 
-```bash
-npm i
-npm run dev
-```
+- No plaintext storage of sensitive numeric fields
+- Minimal disclosure in events to prevent inference
+- Fail-closed design - claims fail if amount exceeds allocation
+- Permission system for encrypted value access
 
-Frontend build:
+### Recommendations
 
-```bash
-npm run build
-```
-
-Contracts (example):
-
-```bash
-cd contracts
-npm i
-npx hardhat compile
-npx hardhat run scripts/deploy.js --network <your_network>
-```
+- Third-party audits before mainnet deployment
+- Rate-limiting on critical paths
+- Governance switches for emergency situations
 
 ---
 
-## 10. License
+## Roadmap
 
-MIT License (see `LICENSE`).
+| Version | Features |
+|---------|----------|
+| v0.1 (Current) | Core create/claim with FHE, wallet integration |
+| v0.2 | Enhanced events, role-based permissions |
+| v0.3 | Third-party integrations, batch operations |
+| v0.4 | Advanced FHE ops, performance optimization |
+
+---
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+<div align="center">
+
+Built with Zama fhEVM for privacy-preserving blockchain applications
+
+</div>
